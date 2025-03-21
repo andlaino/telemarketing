@@ -1,4 +1,3 @@
-
 # Imports
 import pandas            as pd
 import streamlit         as st
@@ -6,6 +5,13 @@ import seaborn           as sns
 import matplotlib.pyplot as plt
 from PIL                 import Image
 from io                  import BytesIO
+
+# Configuração inicial da página da aplicação
+st.set_page_config(page_title = 'Telemarketing analisys', \
+    page_icon = 'telmarketing_icon.png',
+    layout="wide",
+    initial_sidebar_state='expanded'
+)
 
 # Set no tema do seaborn para melhorar o visual dos plots
 custom_params = {"axes.spines.right": False, "axes.spines.top": False}
@@ -46,13 +52,6 @@ def to_excel(df):
 
 # Função principal da aplicação
 def main():
-    # Configuração inicial da página da aplicação
-    st.set_page_config(page_title = 'Telemarketing analisys', \
-        page_icon = 'telmarketing_icon.png',
-        layout="wide",
-        initial_sidebar_state='expanded'
-    )
-
     # Título principal da aplicação
     st.write('# Telemarketing analisys')
     st.markdown("---")
@@ -222,14 +221,4 @@ def main():
 
 
 if __name__ == '__main__':
-	main()
-    
-
-
-
-
-
-
-
-
-
+    main()
