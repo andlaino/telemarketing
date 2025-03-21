@@ -44,10 +44,11 @@ def to_excel(df):
 # Função principal da aplicação
 def main():
     # Configuração inicial da página da aplicação
-    st.set_page_config(page_title = 'Telemarketing analisys', 
-                       page_icon = 'telmarketing_icon.png',
-                       layout="wide",
-                       initial_sidebar_state='expanded')
+    st.set_page_config(page_title = 'Telemarketing analisys', \
+        page_icon = 'telmarketing_icon.png',
+        layout="wide",
+        initial_sidebar_state='expanded'
+    )
 
     # Título principal da aplicação
     st.write('# Telemarketing analisys')
@@ -78,10 +79,11 @@ def main():
             max_age = int(bank.age.max())
             min_age = int(bank.age.min())
             idades = st.slider(label='Idade', 
-                               min_value = min_age,
-                               max_value = max_age, 
-                               value = (min_age, max_age),
-                               step = 1)
+                                        min_value = min_age,
+                                        max_value = max_age, 
+                                        value = (min_age, max_age),
+                                        step = 1)
+
 
             # PROFISSÕES
             jobs_list = bank.job.unique().tolist()
@@ -98,30 +100,36 @@ def main():
             default_list.append('all')
             default_selected =  st.multiselect("Default", default_list, ['all'])
 
+            
             # TEM FINANCIAMENTO IMOBILIÁRIO?
             housing_list = bank.housing.unique().tolist()
             housing_list.append('all')
             housing_selected =  st.multiselect("Tem financiamento imob?", housing_list, ['all'])
 
+            
             # TEM EMPRÉSTIMO?
             loan_list = bank.loan.unique().tolist()
             loan_list.append('all')
             loan_selected =  st.multiselect("Tem empréstimo?", loan_list, ['all'])
 
+            
             # MEIO DE CONTATO?
             contact_list = bank.contact.unique().tolist()
             contact_list.append('all')
             contact_selected =  st.multiselect("Meio de contato", contact_list, ['all'])
 
+            
             # MÊS DO CONTATO
             month_list = bank.month.unique().tolist()
             month_list.append('all')
             month_selected =  st.multiselect("Mês do contato", month_list, ['all'])
 
+            
             # DIA DA SEMANA
             day_of_week_list = bank.day_of_week.unique().tolist()
             day_of_week_list.append('all')
             day_of_week_selected =  st.multiselect("Dia da semana", day_of_week_list, ['all'])
+
 
             # encadeamento de métodos para filtrar a seleção
             bank = (bank.query("age >= @idades[0] and age <= @idades[1]") 
@@ -186,21 +194,22 @@ def main():
                         data = bank_raw_target_perc, 
                         ax = ax[0])
             ax[0].bar_label(ax[0].containers[0])
-            ax[0].set_title('Dados brutos',
-                            fontweight ="bold")
+            ax[0].set_title('Dados brutos', fontweight ="bold")
             
             sns.barplot(x = bank_target_perc.index, 
                         y = 'y', 
                         data = bank_target_perc, 
                         ax = ax[1])
             ax[1].bar_label(ax[1].containers[0])
-            ax[1].set_title('Dados filtrados',
-                            fontweight ="bold")
+            ax[1].set_title('Dados filtrados', fontweight ="bold")
         else:
-            bank_raw_target_perc.plot(kind='pie', autopct='%.2f', ax=ax[0])
+            # Corrigido o gráfico de pizza
+            bank_raw_target_perc['y'] = bank_raw_target_perc['y'].astype(float)  # Garantir que 'y' seja numérico
+            bank_raw_target_perc['y'].plot(kind='pie', autopct='%.2f', ax=ax[0])
             ax[0].set_title('Dados brutos', fontweight="bold")
 
-            bank_target_perc.plot(kind='pie', autopct='%.2f', ax=ax[1])
+            bank_target_perc['y'] = bank_target_perc['y'].astype(float)  # Garantir que 'y' seja numérico
+            bank_target_perc['y'].plot(kind='pie', autopct='%.2f', ax=ax[1])
             ax[1].set_title('Dados filtrados', fontweight="bold")
 
         st.pyplot(plt)
