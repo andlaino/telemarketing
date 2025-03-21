@@ -1,10 +1,10 @@
 # Imports
-import pandas            as pd
-import streamlit         as st
-import seaborn           as sns
+import pandas as pd
+import streamlit as st
+import seaborn as sns
 import matplotlib.pyplot as plt
-from PIL                 import Image
-from io                  import BytesIO
+from PIL import Image
+from io import BytesIO
 
 # Set no tema do seaborn para melhorar o visual dos plots
 custom_params = {"axes.spines.right": False, "axes.spines.top": False}
@@ -12,7 +12,7 @@ sns.set_theme(style="ticks", rc=custom_params)
 
 
 # Função para ler os dados
-@st.cache_data
+@st.cache_data(show_spinner=True, allow_output_mutation=True)
 def load_data(file_data):
     try:
         return pd.read_csv(file_data, sep=';')
@@ -20,7 +20,7 @@ def load_data(file_data):
         return pd.read_excel(file_data)
 
 # Função para filtrar baseado na multiseleção de categorias
-@st.cache_data
+@st.cache_data(allow_output_mutation=True)
 def multiselect_filter(relatorio, col, selecionados):
     if 'all' in selecionados:
         return relatorio
@@ -38,7 +38,7 @@ def to_excel(df):
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
     df.to_excel(writer, index=False, sheet_name='Sheet1')
-    writer._save()  # Alterado para _save em vez de save
+    writer._save()
     processed_data = output.getvalue()
     return processed_data
 
@@ -135,7 +135,7 @@ def main():
 
                     
             # encadeamento de métodos para filtrar a seleção
-            bank = (bank.query("age >= @idades[0] and age <= @idades[1]")
+            bank = (bank.query("age >= @idades[0] and age <= @idades[1]")  # Filtro por idades
                         .pipe(multiselect_filter, 'job', jobs_selected)
                         .pipe(multiselect_filter, 'marital', marital_selected)
                         .pipe(multiselect_filter, 'default', default_selected)
@@ -162,63 +162,48 @@ def main():
         # PLOTS    
         fig, ax = plt.subplots(1, 2, figsize = (5,3))
 
-        bank_raw_target_perc = bank_raw.y.value_counts(normalize = True).to_frame()*100
+        # Proporção de aceitação nos dados originais
+        bank_raw_target_perc = bank_raw['y'].value_counts(normalize=True).to_frame() * 100
         bank_raw_target_perc = bank_raw_target_perc.sort_index()
-        
+
+        # Proporção de aceitação nos dados filtrados
+        bank_target_perc = bank['y'].value_counts(normalize=True).to_frame() * 100
+        bank_target_perc = bank_target_perc.sort_index()
+
         try:
-            bank_target_perc = bank.y.value_counts(normalize = True).to_frame()*100
-            bank_target_perc = bank_target_perc.sort_index()
-        except:
-            st.error('Erro no filtro')
-        
-        # Botões de download dos dados dos gráficos
-        col1, col2 = st.columns(2)
+            # Plots
+            col1, col2 = st.columns(2)
 
-        df_xlsx = to_excel(bank_raw_target_perc)
-        col1.write('### Proporção original')
-        col1.write(bank_raw_target_perc)
-        col1.download_button(label='📥 Download',
-                            data=df_xlsx ,
-                            file_name= 'bank_raw_y.xlsx')
-        
-        df_xlsx = to_excel(bank_target_perc)
-        col2.write('### Proporção da tabela com filtros')
-        col2.write(bank_target_perc)
-        col2.download_button(label='📥 Download',
-                            data=df_xlsx ,
-                            file_name= 'bank_y.xlsx')
-        st.markdown("---")
-    
+            # Plot gráfico de barras
+            if graph_type == 'Barras':
+                sns.barplot(x=bank_raw_target_perc.index, 
+                            y=bank_raw_target_perc['y'],
+                            ax=ax[0])
+                ax[0].bar_label(ax[0].containers[0])
+                ax[0].set_title('Proporção de Aceitação - Dados Brutos', fontweight="bold")
+                
+                sns.barplot(x=bank_target_perc.index, 
+                            y=bank_target_perc['y'], 
+                            ax=ax[1])
+                ax[1].bar_label(ax[1].containers[0])
+                ax[1].set_title('Proporção de Aceitação - Dados Filtrados', fontweight="bold")
+            else:
+                # Plot gráfico de pizza
+                bank_raw_target_perc.plot(kind='pie', 
+                                          autopct='%.2f%%', 
+                                          y='y', ax=ax[0], legend=False)
+                ax[0].set_title('Proporção de Aceitação - Dados Brutos', fontweight="bold")
+                
+                bank_target_perc.plot(kind='pie', 
+                                      autopct='%.2f%%', 
+                                      y='y', ax=ax[1], legend=False)
+                ax[1].set_title('Proporção de Aceitação - Dados Filtrados', fontweight="bold")
+        except Exception as e:
+            st.error(f'Ocorreu um erro ao gerar os gráficos: {e}')
 
-        st.write('## Proporção de aceite')
-        # PLOTS    
-        if graph_type == 'Barras':
-            sns.barplot(x = bank_raw_target_perc.index, 
-                        y = 'y',
-                        data = bank_raw_target_perc, 
-                        ax = ax[0])
-            ax[0].bar_label(ax[0].containers[0])
-            ax[0].set_title('Dados brutos',
-                            fontweight ="bold")
-            
-            sns.barplot(x = bank_target_perc.index, 
-                        y = 'y', 
-                        data = bank_target_perc, 
-                        ax = ax[1])
-            ax[1].bar_label(ax[1].containers[0])
-            ax[1].set_title('Dados filtrados',
-                            fontweight ="bold")
-        else:
-            bank_raw_target_perc.plot(kind='pie', autopct='%.2f', y='y', ax = ax[0])
-            ax[0].set_title('Dados brutos',
-                            fontweight ="bold")
-            
-            bank_target_perc.plot(kind='pie', autopct='%.2f', y='y', ax = ax[1])
-            ax[1].set_title('Dados filtrados',
-                            fontweight ="bold")
-
-        st.pyplot(plt)
+        # Exibe os gráficos
+        st.pyplot(fig)
 
 
 if __name__ == '__main__':
-	main()
+    main()
