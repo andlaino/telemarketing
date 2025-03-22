@@ -155,7 +155,7 @@ def main():
         st.markdown("---")
 
         # PLOTS    
-        fig, ax = plt.subplots(1, 2, figsize=(7, 5))  # Aumentei o tamanho do gráfico
+        fig, ax = plt.subplots(1, 2, figsize=(10, 5))  # Ajustei o tamanho do gráfico
 
         # Verificar a existência da coluna 'y' antes de usar
         if 'y' in bank_raw.columns:
@@ -202,8 +202,11 @@ def main():
         ax[1].set_title('Dados filtrados', fontweight="bold")
 
         # Ajuste das legendas
-        ax[0].legend(loc='center left', bbox_to_anchor=(1, 0.5), title="Proporção")
-        ax[1].legend(loc='center left', bbox_to_anchor=(1, 0.5), title="Proporção")
+        ax[0].legend(loc='center left', bbox_to_anchor=(1, 0.5), title="Proporção", fontsize=10)
+        ax[1].legend(loc='center left', bbox_to_anchor=(1, 0.5), title="Proporção", fontsize=10)
+
+        # Ajuste para evitar sobreposição
+        fig.tight_layout(pad=4.0)  # Adiciona espaço entre os gráficos
 
         # Exibir os gráficos
         st.pyplot(plt)
