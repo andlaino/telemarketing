@@ -1,51 +1,3 @@
-import pandas as pd
-import streamlit as st
-import seaborn as sns
-import matplotlib.pyplot as plt
-from PIL import Image
-from io import BytesIO
-
-# Configuração inicial da página da aplicação
-st.set_page_config(page_title='Telemarketing analisys', 
-                   page_icon='telmarketing_icon.png',
-                   layout="wide",
-                   initial_sidebar_state='expanded')
-
-# Set no tema do seaborn para melhorar o visual dos plots
-custom_params = {"axes.spines.right": False, "axes.spines.top": False}
-sns.set_theme(style="ticks", rc=custom_params)
-
-# Função para ler os dados
-@st.cache_data(show_spinner=True)
-def load_data(file_data):
-    try:
-        return pd.read_csv(file_data, sep=';')
-    except:
-        return pd.read_excel(file_data)
-
-# Função para filtrar baseado na multiseleção de categorias
-@st.cache_data
-def multiselect_filter(relatorio, col, selecionados):
-    if 'all' in selecionados:
-        return relatorio
-    else:
-        return relatorio[relatorio[col].isin(selecionados)].reset_index(drop=True)
-
-# Função para converter o df para csv
-@st.cache_data
-def convert_df(df):
-    return df.to_csv(index=False).encode('utf-8')
-
-# Função para converter o df para excel
-@st.cache_data
-def to_excel(df):
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer, index=False, sheet_name='Sheet1')
-    writer.close()
-    processed_data = output.getvalue()
-    return processed_data
-
 # Função principal da aplicação
 def main():
     # Título principal da aplicação
@@ -82,7 +34,6 @@ def main():
                                         value = (min_age, max_age),
                                         step = 1)
 
-
             # PROFISSÕES
             jobs_list = bank.job.unique().tolist()
             jobs_list.append('all')
@@ -98,38 +49,32 @@ def main():
             default_list.append('all')
             default_selected =  st.multiselect("Default", default_list, ['all'])
 
-            
             # TEM FINANCIAMENTO IMOBILIÁRIO?
             housing_list = bank.housing.unique().tolist()
             housing_list.append('all')
             housing_selected =  st.multiselect("Tem financiamento imob?", housing_list, ['all'])
 
-            
             # TEM EMPRÉSTIMO?
             loan_list = bank.loan.unique().tolist()
             loan_list.append('all')
             loan_selected =  st.multiselect("Tem empréstimo?", loan_list, ['all'])
 
-            
             # MEIO DE CONTATO?
             contact_list = bank.contact.unique().tolist()
             contact_list.append('all')
             contact_selected =  st.multiselect("Meio de contato", contact_list, ['all'])
 
-            
             # MÊS DO CONTATO
             month_list = bank.month.unique().tolist()
             month_list.append('all')
             month_selected =  st.multiselect("Mês do contato", month_list, ['all'])
 
-            
             # DIA DA SEMANA
             day_of_week_list = bank.day_of_week.unique().tolist()
             day_of_week_list.append('all')
             day_of_week_selected =  st.multiselect("Dia da semana", day_of_week_list, ['all'])
 
-
-            # encadeamento de métodos para filtrar a seleção
+            # Encadeamento de métodos para filtrar a seleção
             bank = (bank.query("age >= @idades[0] and age <= @idades[1]") 
                         .pipe(multiselect_filter, 'job', jobs_selected)
                         .pipe(multiselect_filter, 'marital', marital_selected)
@@ -195,6 +140,21 @@ def main():
             st.pyplot(fig)
 
         elif graph_type == 'Pizza':
+            # Verifique se a coluna 'y' está presente nos dados brutos e filtrados
+            if 'y' in bank_raw.columns:
+                bank_raw_target_perc = bank_raw['y'].value_counts(normalize=True).to_frame() * 100
+                bank_raw_target_perc = bank_raw_target_perc.sort_index()
+            else:
+                st.error("A coluna 'y' não foi encontrada no conjunto de dados.")
+                return
+
+            if 'y' in bank.columns:
+                bank_target_perc = bank['y'].value_counts(normalize=True).to_frame() * 100
+                bank_target_perc = bank_target_perc.sort_index()
+            else:
+                st.error("A coluna 'y' não foi encontrada no conjunto de dados filtrados.")
+                return
+
             # Gráfico de Pizza (para os dados brutos e filtrados)
             fig_pizza, ax_pizza = plt.subplots(1, 2, figsize=(12, 6))  # Ajustando para mostrar os dois gráficos de pizza lado a lado
 
