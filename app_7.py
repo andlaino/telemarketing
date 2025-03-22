@@ -158,15 +158,22 @@ def main():
         # PLOTS    
         fig, ax = plt.subplots(1, 2, figsize = (5,3))
 
-        bank_raw_target_perc = bank_raw.y.value_counts(normalize = True).to_frame()*100
-        bank_raw_target_perc = bank_raw_target_perc.sort_index()
+        # Verificar a existência da coluna 'y' antes de usar
+        if 'y' in bank_raw.columns:
+            bank_raw_target_perc = bank_raw['y'].value_counts(normalize=True).to_frame() * 100
+            bank_raw_target_perc = bank_raw_target_perc.sort_index()
+        else:
+            st.error("A coluna 'y' não foi encontrada no conjunto de dados.")
+            return  # Interrompe a execução se a coluna 'y' não estiver presente
         
-        try:
-            bank_target_perc = bank.y.value_counts(normalize = True).to_frame()*100
+        # Para o caso de dados filtrados
+        if 'y' in bank.columns:
+            bank_target_perc = bank['y'].value_counts(normalize=True).to_frame() * 100
             bank_target_perc = bank_target_perc.sort_index()
-        except:
-            st.error('Erro no filtro')
-        
+        else:
+            st.error("A coluna 'y' não foi encontrada no conjunto de dados filtrados.")
+            return  # Interrompe a execução se a coluna 'y' não estiver presente
+
         # Botões de download dos dados dos gráficos
         col1, col2 = st.columns(2)
 
@@ -194,23 +201,24 @@ def main():
                         data = bank_raw_target_perc, 
                         ax = ax[0])
             ax[0].bar_label(ax[0].containers[0])
-            ax[0].set_title('Dados brutos', fontweight ="bold")
+            ax[0].set_title('Dados brutos',
+                            fontweight ="bold")
             
             sns.barplot(x = bank_target_perc.index, 
                         y = 'y', 
                         data = bank_target_perc, 
                         ax = ax[1])
             ax[1].bar_label(ax[1].containers[0])
-            ax[1].set_title('Dados filtrados', fontweight ="bold")
+            ax[1].set_title('Dados filtrados',
+                            fontweight ="bold")
         else:
-            # Corrigido o gráfico de pizza
-            bank_raw_target_perc['y'] = bank_raw_target_perc['y'].astype(float)  # Garantir que 'y' seja numérico
-            bank_raw_target_perc['y'].plot(kind='pie', autopct='%.2f', ax=ax[0])
-            ax[0].set_title('Dados brutos', fontweight="bold")
-
-            bank_target_perc['y'] = bank_target_perc['y'].astype(float)  # Garantir que 'y' seja numérico
-            bank_target_perc['y'].plot(kind='pie', autopct='%.2f', ax=ax[1])
-            ax[1].set_title('Dados filtrados', fontweight="bold")
+            bank_raw_target_perc.plot(kind='pie', autopct='%.2f', ax=ax[0])
+            ax[0].set_title('Dados brutos',
+                            fontweight ="bold")
+            
+            bank_target_perc.plot(kind='pie', autopct='%.2f', ax=ax[1])
+            ax[1].set_title('Dados filtrados',
+                            fontweight ="bold")
 
         st.pyplot(plt)
 
