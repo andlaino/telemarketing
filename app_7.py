@@ -165,7 +165,7 @@ def main():
         else:
             st.error("A coluna 'y' não foi encontrada no conjunto de dados.")
             return  # Interrompe a execução se a coluna 'y' não estiver presente
-        
+
         # Para o caso de dados filtrados
         if 'y' in bank.columns:
             bank_target_perc = bank['y'].value_counts(normalize=True).to_frame() * 100
@@ -183,7 +183,7 @@ def main():
         col1.download_button(label='📥 Download',
                             data=df_xlsx ,
                             file_name= 'bank_raw_y.xlsx')
-        
+
         df_xlsx = to_excel(bank_target_perc)
         col2.write('### Proporção da tabela com filtros')
         col2.write(bank_target_perc)
@@ -191,7 +191,6 @@ def main():
                             data=df_xlsx ,
                             file_name= 'bank_y.xlsx')
         st.markdown("---")
-    
 
         st.write('## Proporção de aceite')
         # PLOTS    
@@ -203,7 +202,7 @@ def main():
             ax[0].bar_label(ax[0].containers[0])
             ax[0].set_title('Dados brutos',
                             fontweight ="bold")
-            
+
             sns.barplot(x = bank_target_perc.index, 
                         y = 'y', 
                         data = bank_target_perc, 
@@ -212,16 +211,16 @@ def main():
             ax[1].set_title('Dados filtrados',
                             fontweight ="bold")
         else:
-            bank_raw_target_perc.plot(kind='pie', autopct='%.2f', ax=ax[0])
+            # Usando o parâmetro y no gráfico de pizza
+            bank_raw_target_perc.plot(kind='pie', y=bank_raw_target_perc.columns[0], autopct='%.2f', ax=ax[0])
             ax[0].set_title('Dados brutos',
                             fontweight ="bold")
-            
-            bank_target_perc.plot(kind='pie', autopct='%.2f', ax=ax[1])
+
+            bank_target_perc.plot(kind='pie', y=bank_target_perc.columns[0], autopct='%.2f', ax=ax[1])
             ax[1].set_title('Dados filtrados',
                             fontweight ="bold")
 
         st.pyplot(plt)
-
 
 if __name__ == '__main__':
     main()
