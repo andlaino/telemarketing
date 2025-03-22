@@ -1,4 +1,3 @@
-# Imports
 import pandas as pd
 import streamlit as st
 import seaborn as sns
@@ -156,7 +155,7 @@ def main():
         st.markdown("---")
 
         # PLOTS    
-        fig, ax = plt.subplots(1, 2, figsize = (5,3))
+        fig, ax = plt.subplots(1, 2, figsize=(7, 5))  # Aumentei o tamanho do gráfico
 
         # Verificar a existência da coluna 'y' antes de usar
         if 'y' in bank_raw.columns:
@@ -174,52 +173,39 @@ def main():
             st.error("A coluna 'y' não foi encontrada no conjunto de dados filtrados.")
             return  # Interrompe a execução se a coluna 'y' não estiver presente
 
-        # Botões de download dos dados dos gráficos
-        col1, col2 = st.columns(2)
+        # Mapeando os valores 'yes' para 'sim' e 'no' para 'não'
+        bank_raw_target_perc.index = bank_raw_target_perc.index.map({'yes': 'sim', 'no': 'não'})
+        bank_target_perc.index = bank_target_perc.index.map({'yes': 'sim', 'no': 'não'})
 
-        df_xlsx = to_excel(bank_raw_target_perc)
-        col1.write('### Proporção original')
-        col1.write(bank_raw_target_perc)
-        col1.download_button(label='📥 Download',
-                            data=df_xlsx ,
-                            file_name= 'bank_raw_y.xlsx')
+        # Plot para os dados brutos
+        bank_raw_target_perc.plot(kind='pie', 
+                                  y=bank_raw_target_perc.columns[0], 
+                                  autopct='%.2f', 
+                                  ax=ax[0], 
+                                  labels=bank_raw_target_perc.index,
+                                  startangle=90,  # Define o ângulo inicial
+                                  legend=True,    # Exibe a legenda do lado
+                                  colors=['#66b3ff', '#99ff99'])  # Ajuste de cores
 
-        df_xlsx = to_excel(bank_target_perc)
-        col2.write('### Proporção da tabela com filtros')
-        col2.write(bank_target_perc)
-        col2.download_button(label='📥 Download',
-                            data=df_xlsx ,
-                            file_name= 'bank_y.xlsx')
-        st.markdown("---")
+        ax[0].set_title('Dados brutos', fontweight="bold")
 
-        st.write('## Proporção de aceite')
-        # PLOTS    
-        if graph_type == 'Barras':
-            sns.barplot(x = bank_raw_target_perc.index, 
-                        y = 'y',
-                        data = bank_raw_target_perc, 
-                        ax = ax[0])
-            ax[0].bar_label(ax[0].containers[0])
-            ax[0].set_title('Dados brutos',
-                            fontweight ="bold")
+        # Plot para os dados filtrados
+        bank_target_perc.plot(kind='pie', 
+                              y=bank_target_perc.columns[0], 
+                              autopct='%.2f', 
+                              ax=ax[1], 
+                              labels=bank_target_perc.index,
+                              startangle=90,  # Define o ângulo inicial
+                              legend=True,    # Exibe a legenda do lado
+                              colors=['#66b3ff', '#99ff99'])  # Ajuste de cores
 
-            sns.barplot(x = bank_target_perc.index, 
-                        y = 'y', 
-                        data = bank_target_perc, 
-                        ax = ax[1])
-            ax[1].bar_label(ax[1].containers[0])
-            ax[1].set_title('Dados filtrados',
-                            fontweight ="bold")
-        else:
-            # Usando o parâmetro y no gráfico de pizza
-            bank_raw_target_perc.plot(kind='pie', y=bank_raw_target_perc.columns[0], autopct='%.2f', ax=ax[0])
-            ax[0].set_title('Dados brutos',
-                            fontweight ="bold")
+        ax[1].set_title('Dados filtrados', fontweight="bold")
 
-            bank_target_perc.plot(kind='pie', y=bank_target_perc.columns[0], autopct='%.2f', ax=ax[1])
-            ax[1].set_title('Dados filtrados',
-                            fontweight ="bold")
+        # Ajuste das legendas
+        ax[0].legend(loc='center left', bbox_to_anchor=(1, 0.5), title="Proporção")
+        ax[1].legend(loc='center left', bbox_to_anchor=(1, 0.5), title="Proporção")
 
+        # Exibir os gráficos
         st.pyplot(plt)
 
 if __name__ == '__main__':
